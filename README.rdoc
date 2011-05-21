@@ -1,0 +1,51 @@
+= LAZY Agnostic Application Generators (padrino-lazy)
+
+=== Overview
+
+Through padrino-lazy, we can include some common properties shared between the model object used a base model object
+
+Padrino is very good framework, and  *almost*  follows the DRY principle (Don't Repeat Yourself)
+When we need to have some common properties shared between the model object  of our ORM, using the generator padrino-gen,
+We can *only* include these properties in each model  to generate.
+
+I hope this idea will be included in Padrino Framework.
+
+== Principle / Step
+
+1) generate a model
+2) convert the model into base model ( move this model into lib/ folder)
+3) save config file with model base's list
+4) generate a model from base model
+5) generate a migration file 
+
+== Usage
+
+Step 1-2-3
+     $ padrino-lazy base --c config_file --b base_model_name --f field_to_create
+
+Step 4-5 
+    $ padrino-lazy model --c config_file --b base_model_name --f field_to_create --m model_name
+
+=== Options
+
+    --f list field to generate
+    --c config file's name (saved into config/ folder)
+    --b base model name (es: BaseModel)
+    --m model name to create (es: User)
+
+== Known issue 
+
+* VERY VERY alpha  code !! (thanks to my pig/lazy side :D )
+* --f options need dobule quote around fields
+* TESTING only with datamapper and activerecord into linux machine
+
+=== TODO:
+* Test all code !
+* Use Padrino::Generators instead of Commander
+* Default config file name (very lazy  :P )
+
+
+== THANK
+Team Padrino
+DaddYE
+Piedinodifata

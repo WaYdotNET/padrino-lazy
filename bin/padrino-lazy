@@ -1,0 +1,156 @@
+#!/usr/bin/env ruby
+require 'rubygems'  unless defined?(Gem)
+require 'commander/import'
+require 'yaml'
+require 'fileutils'
+
+padrino_gen_path = File.expand_path('../../lib/padrino-lazy', __FILE__)
+$:.unshift(padrino_gen_path)
+require 'version'
+
+##################################
+###      COMMANDER             ###
+##################################
+
+program :name,          'padrino-lazy'
+program :version,       Padrino::Lazy.version
+program :description,   'Padrino model generator for lazy dev!'
+program :help,          'Author', 'Carlo Bertini [WaYdotNET]  <waydotnet@gmail.com>'
+
+default_command :help
+
+
+# HACK commander's bug
+# see bug https://github.com/visionmedia/commander/issues/8
+def hack_options command
+  command.option '--c', '--config FILE',   String, 'config file to save into config directory'
+  command.option '--b', '--base STRING',   String, 'base model name'
+  command.option '--f', '--fields STRING', String, 'field to create'
+end
+
+command :base do |c|
+  hack_options c
+  c.syntax = "padrino-lazy base [options]"
+  c.description ="Creation BASE"
+
+  c.action do |args, options|
+    say "common options"
+    common options
+
+    say "create a basic model"
+    %x{ padrino g model #{options.base} #{options.fields} -s }
+    say "store data into config file"
+    store_result options
+
+    say "copy file to lib folder"
+    FileUtils.mkdir "#{Dir.pwd}/lib" if !File.exist?  "#{Dir.pwd}/lib"
+    FileUtils.cp("#{Dir.pwd}/app/models/#{options.base.to_underscore}.rb", "#{Dir.pwd}/lib/#{options.base.to_underscore}.rb")
+
+    say "delete model"
+    %x{ padrino g model #{options.base} -d }
+
+  end
+end
+
+command :model do |c|
+  hack_options c
+  c.syntax = "padrino-lazy model [options]"
+  c.description ="Creation MODEL"
+  c.option '--m STRING','--model', String, 'model name'
+  c.action  do |args, options|
+    common options
+    options.model = ask ("model: ") if !options.model
+
+    load_base_model options
+
+    # create model
+    %x{ padrino g model #{options.model} #{options.fields} }
+
+    # read model file
+    lazy = File.open("app/models/#{options.model.to_underscore}.rb").read
+
+    # lazy model :P
+    lazy_work lazy, options
+
+    File.open("app/models/#{options.model.to_underscore}.rb","w+"){|f| f.puts lazy }
+
+    # create migration
+    %x{ padrino g migration AddBasicModelTo#{options.model} #{options.fields} }
+  end
+end
+
+##################################
+###      PADRINO-LAZY          ###
+##################################
+
+
+# HACK: camelcase
+class String
+  def to_underscore
+    self.gsub(/::/, '/').
+      gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+      gsub(/([a-z\d])([A-Z])/,'\1_\2').
+      tr("-", "_").
+      downcase
+  end
+end
+
+
+# check common input
+def common options
+  # check input information
+  options.base = ask ("base model: ") if !options.base
+  options.fields = ask ("fields: ") if !options.fields
+  options.config = ask ("config file: ") if !options.config
+
+  @base_all= []
+  if File.exist? "config/#{options.config}.yml"
+    file = File.open("config/#{options.config}.yml")
+    @base_all = YAML.load(file)
+  end
+  @base_current = nil
+end
+
+
+# replace/remove code
+def lazy_work(lazy, options)
+  # DataMapper
+  lazy.gsub!("class #{options.model}\n","class #{options.model} < #{options.base}\n")
+  lazy.gsub!("include DataMapper::Resource\n","")
+  lazy.gsub!("property :id, Serial\n","")
+  # ActiveRecord
+  lazy.gsub!("ActiveRecord::Base","#{options.base}")
+  # CouchRest
+  lazy.gsub!("CouchRest::Model::Base","#{options.base}")
+  # MongoId ????
+  lazy.gsub!("class #{options.model}\n","class #{options.model} < #{options.base}\n")
+  lazy.gsub!("include Mongoid::Document\n","")
+  lazy.gsub!("include Mongoid::Timestamps # adds created_at and updated_at fields\n","")
+  # MongoMapper
+  lazy.gsub!("class #{options.model}\n","class #{options.model} < #{options.base}\n")
+  lazy.gsub!("include Mongoid::Document\n","")
+  # Mongomatic
+  lazy.gsub!("Mongomatic::Base","#{options.base}")
+  # Ohm
+  lazy.gsub!("Ohm::Model","#{options.base}")
+  lazy.gsub!("include Ohm::Timestamping\n","")
+  lazy.gsub!("include Ohm::Typecast\n","")
+  # Sequel
+  lazy.gsub!("Sequel::Model","#{options.base}")
+end
+
+# load select base model
+def load_base_model options
+  @base_all.each{|f| @base_current = f if f["base"] == options.base}
+end
+
+# save options to config file
+def store_result options
+  say "load base model"
+  load_base_model options
+  @base_all.delete @base_current
+  @base_current = { "base" => options.base, "fields" => options.fields}
+  @base_all << @base_current
+  File.open("config/#{options.config}.yml","w+"){|f| f.puts @base_all.to_yaml}
+end
+
