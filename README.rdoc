@@ -37,6 +37,79 @@ Step 4-5
     --b base model name (es: BaseModel)
     --m model name to create (es: User)
 
+== Example
+    $ padrino-lazy base --c config --b BaseModel --f
+    "create_at:datetime is_active:boolean"
+
+now we have
+*  lib/base_model.rb
+   class BaseModel
+  include DataMapper::Resource
+
+  # property <name>, <type>
+  property :id, Serial
+  property :create_at, DateTime
+  property :is_active, Boolean
+end
+
+* config/config.yml
+---
+- base: BaseModel
+  fields: create_at:datetime
+
+    $ padrino-lazy model --c config --b BaseModel --f "name:string
+    have_children:boolean born:date foo:integer"  --m User
+
+* app/models/user.rb
+
+    class User < BaseModel
+
+      # property <name>, <type>
+      property :name, String
+      property :have_children, Boolean
+      property :born, Date
+      property :foo, Integer
+    end
+
+* db/migrate/001_create_users.rb
+    migration 1, :create_users do
+      up do
+        create_table :users do
+          column :id, Integer, :serial => true
+          column :name, String
+          column :have_children, Boolean
+          column :born, Date
+          column :foo, Integer
+       end
+      end
+
+      down do
+        drop_table :users
+      end
+    end
+
+* db/migrate/002_add_basic_model_to_user.rb
+    migration 2, :add_basic_model_to_user do
+      up do
+        modify_table :users do
+          add_column :name, String
+         add_column :have_children, Boolean
+         add_column :born, Date
+         add_column :foo, Integer
+        end
+      end
+
+      down do
+        modify_table :users do
+          drop_column :name
+         drop_column :have_children
+         drop_column :born
+         drop_column :foo
+       end
+      end
+    end
+
+
 == Known issue
 
 * VERY VERY alpha  code !! (thanks to my pig/lazy side :D )
