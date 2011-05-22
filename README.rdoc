@@ -53,9 +53,9 @@ now we have
 end
 
 * config/config.yml
----
-- base: BaseModel
-  fields: create_at:datetime
+    ---
+    - base: BaseModel
+      fields: create_at:datetime
 
     $ padrino-lazy model --c config --b BaseModel --f "name:string
     have_children:boolean born:date foo:integer"  --m User
@@ -69,7 +69,7 @@ end
       property :have_children, Boolean
       property :born, Date
       property :foo, Integer
-    end
+     end
 
 * db/migrate/001_create_users.rb
     migration 1, :create_users do
