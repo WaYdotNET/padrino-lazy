@@ -18,6 +18,10 @@ I hope this idea will be included in Padrino Framework.
 4. generate a model from base model
 5. generate a migration file
 
+=== Install
+
+gem install padrino-lazy --pre
+
 == Usage
 
 Step 1-2-3
@@ -37,6 +41,7 @@ Step 4-5
 
 * VERY VERY alpha  code !! (thanks to my pig/lazy side :D )
 * --f options need dobule quote around fields
+* --b write in CamelCase
 * TESTING only with datamapper and activerecord into linux machine
 
 === TODO:
