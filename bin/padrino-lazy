@@ -73,9 +73,9 @@ command :model do |c|
     lazy_work lazy, options
 
     File.open("app/models/#{options.model.to_underscore}.rb","w+"){|f| f.puts lazy }
-
+    say "#{@base_current[:fields.to_s]}"
     # create migration
-    %x{ padrino g migration AddBasicModelTo#{options.model} #{options.fields} }
+    %x{ padrino g migration AddBasicModelTo#{options.model} #{@base_current[:fields.to_s]} }
   end
 end
 

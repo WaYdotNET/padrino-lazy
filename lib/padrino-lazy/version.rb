@@ -2,7 +2,7 @@
 # Manages current Padrino lazy version for use in gem generation.
 module Padrino
   module Lazy
-    VERSION = '0.0.1alpha' unless defined?(Padrino::Lazy::VERSION)
+    VERSION = '0.0.2alpha' unless defined?(Padrino::Lazy::VERSION)
     ##
     # Return the current Padrino version
     #
