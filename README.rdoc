@@ -1,5 +1,7 @@
 = LAZY Agnostic Application Generators (padrino-lazy)
 
+http://api.coderwall.com/waydotnet/endorsecount.png
+
 === Overview
 
 Through padrino-lazy, we can include some common properties shared between the model object used a base model object
